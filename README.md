@@ -21,13 +21,13 @@ Details, the Neon connection, and the individual commands are in [docs/setup.md]
 
 ## Common commands
 
-| Command | What it does |
-| --- | --- |
-| `make setup` | Install dependencies, start Postgres, migrate |
-| `bash scripts/dev.sh` | API with reload, and the Next.js dev server |
-| `make test` | Migrate, then run the API tests and workspace tests |
-| `make lint` | Ruff, ESLint, and Prettier |
-| `make typecheck` | mypy and TypeScript |
+| Command                | What it does                                          |
+| ---------------------- | ----------------------------------------------------- |
+| `make setup`           | Install dependencies, start Postgres, migrate         |
+| `bash scripts/dev.sh`  | API with reload, and the Next.js dev server           |
+| `make test`            | Migrate, then run the API tests and workspace tests   |
+| `make lint`            | Ruff, ESLint, and Prettier                            |
+| `make typecheck`       | mypy and TypeScript                                   |
 | `make generate-client` | Refresh `packages/api-client` from the OpenAPI schema |
 
 Python dependencies are pinned in `apps/api/uv.lock`. JavaScript dependencies are pinned in `pnpm-lock.yaml`.

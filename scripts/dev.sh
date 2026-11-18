@@ -9,9 +9,9 @@ if [ ! -f .env ]; then
 fi
 
 docker compose -f infra/docker-compose.yml up -d --wait postgres
-uv run --project apps/api --directory apps/api alembic upgrade head
+uv run --directory apps/api alembic upgrade head
 
-uv run --project apps/api --directory apps/api uvicorn tutor_api.main:app \
+uv run --directory apps/api uvicorn tutor_api.main:app \
   --reload \
   --host 127.0.0.1 \
   --port 8000 \

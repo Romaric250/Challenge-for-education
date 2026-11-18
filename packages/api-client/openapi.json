@@ -1,0 +1,175 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Rwanda AI Tutor",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/health/live": {
+      "get": {
+        "tags": ["health"],
+        "summary": "Get Liveness",
+        "operationId": "getLiveness",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveStatus"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": ["health"],
+        "summary": "Get Readiness",
+        "operationId": "getReadiness",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessReport"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadinessReport"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/service": {
+      "get": {
+        "tags": ["service"],
+        "summary": "Get Service Identity",
+        "operationId": "getServiceIdentity",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceIdentity"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DependencyStatus": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["up", "down", "not_configured"],
+            "title": "Status"
+          },
+          "latency_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latency Ms"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": ["status"],
+        "title": "DependencyStatus"
+      },
+      "LiveStatus": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "live",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": ["status"],
+        "title": "LiveStatus"
+      },
+      "ReadinessChecks": {
+        "properties": {
+          "database": {
+            "$ref": "#/components/schemas/DependencyStatus"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/DependencyStatus"
+          }
+        },
+        "type": "object",
+        "required": ["database", "provider"],
+        "title": "ReadinessChecks"
+      },
+      "ReadinessReport": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["ready", "not_ready"],
+            "title": "Status"
+          },
+          "checks": {
+            "$ref": "#/components/schemas/ReadinessChecks"
+          }
+        },
+        "type": "object",
+        "required": ["status", "checks"],
+        "title": "ReadinessReport"
+      },
+      "ServiceIdentity": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "string",
+            "title": "Version"
+          },
+          "api_version": {
+            "type": "string",
+            "const": "v1",
+            "title": "Api Version",
+            "default": "v1"
+          }
+        },
+        "type": "object",
+        "required": ["name", "version"],
+        "title": "ServiceIdentity"
+      }
+    }
+  }
+}

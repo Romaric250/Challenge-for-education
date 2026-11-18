@@ -17,10 +17,11 @@ From the repository root:
 
 ```bash
 pnpm install
-uv sync --project apps/api --all-groups --python 3.12
+uv sync --directory apps/api --all-groups --python 3.12
+uv run --project apps/api pre-commit install
 cp .env.example .env
 docker compose -f infra/docker-compose.yml up -d --wait postgres
-uv run --project apps/api --directory apps/api alembic upgrade head
+uv run --directory apps/api alembic upgrade head
 ```
 
 Or, with Make:
@@ -47,10 +48,10 @@ Readiness uses its own JSON document and HTTP status. Every other error uses `ap
 ## Checks
 
 ```bash
-uv run --project apps/api --directory apps/api ruff check src tests
-uv run --project apps/api --directory apps/api ruff format --check src tests
-uv run --project apps/api --directory apps/api mypy
-uv run --project apps/api --directory apps/api pytest
+uv run --directory apps/api ruff check src tests
+uv run --directory apps/api ruff format --check src tests
+uv run --directory apps/api mypy
+uv run --directory apps/api pytest
 pnpm exec turbo run lint typecheck build
 pnpm exec prettier --check .
 ```
@@ -58,7 +59,7 @@ pnpm exec prettier --check .
 `pytest` includes integration tests that need the migrated database from the steps above. Unit tests alone:
 
 ```bash
-uv run --project apps/api --directory apps/api pytest -m "not integration"
+uv run --directory apps/api pytest -m "not integration"
 ```
 
 Regenerate the TypeScript client after the API schema changes:
@@ -66,6 +67,8 @@ Regenerate the TypeScript client after the API schema changes:
 ```bash
 bash scripts/generate-api-client.sh
 ```
+
+The generator is pinned to TypeScript 5.9. `openapi-typescript` still calls the TypeScript 5 compiler API, which TypeScript 7 no longer exposes. The web app and the client package typecheck with TypeScript 7.
 
 The script writes `packages/api-client/openapi.json` and `packages/api-client/src/schema.d.ts`. CI fails if those files are out of date.
 
@@ -90,7 +93,7 @@ The API accepts `postgresql://` and `postgresql+asyncpg://`. It removes `sslmode
 Run the same Alembic upgrade against that URL:
 
 ```bash
-uv run --project apps/api --directory apps/api alembic upgrade head
+uv run --directory apps/api alembic upgrade head
 ```
 
 Neon provides pgvector. The migration creates the extension in the database you point at. Do not commit the Neon URL.

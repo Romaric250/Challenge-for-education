@@ -4,7 +4,7 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
 
-uv run --project apps/api --directory apps/api python -m tutor_api.openapi_export
+uv run --directory apps/api python -m tutor_api.openapi_export
 pnpm --filter @rwanda-ai-tutor/api-client generate
 pnpm exec prettier --write \
   packages/api-client/openapi.json \
