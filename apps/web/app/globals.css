@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@import "@rwanda-ai-tutor/config/theme.css";
+
+body {
+  font-family: var(--font-sans), sans-serif;
+}

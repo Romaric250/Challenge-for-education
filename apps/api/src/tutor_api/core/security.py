@@ -17,7 +17,10 @@ _log = get_logger("tutor_api.access")
 def _header(scope: Scope, name: bytes) -> str | None:
     for key, value in scope.get("headers", []):
         if key.lower() == name:
-            return value.decode("latin-1")
+            decoded = value.decode("latin-1")
+            if isinstance(decoded, str):
+                return decoded
+            return None
     return None
 
 
@@ -77,9 +80,7 @@ def security_header_pairs(settings: Settings) -> list[tuple[bytes, bytes]]:
         (b"content-security-policy", b"default-src 'none'; frame-ancestors 'none'"),
     ]
     if settings.app_env == "production":
-        headers.append(
-            (b"strict-transport-security", b"max-age=31536000; includeSubDomains")
-        )
+        headers.append((b"strict-transport-security", b"max-age=31536000; includeSubDomains"))
     return headers
 
 

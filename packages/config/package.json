@@ -1,0 +1,16 @@
+{
+  "name": "@rwanda-ai-tutor/config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./typescript/base.json": "./typescript/base.json",
+    "./typescript/nextjs.json": "./typescript/nextjs.json",
+    "./eslint/next": "./eslint/next.mjs",
+    "./theme.css": "./theme.css"
+  },
+  "dependencies": {
+    "eslint": "10.15.0",
+    "eslint-config-next": "16.4.6"
+  }
+}

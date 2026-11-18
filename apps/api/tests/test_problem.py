@@ -1,17 +1,21 @@
-from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from tutor_api.core.errors import DomainError
-from tutor_api.core.settings import Settings
+from tutor_api.core.settings import AppEnvironment, Settings
 from tutor_api.main import create_app
 
 
-def _settings(**overrides: object) -> Settings:
-    values: dict[str, object] = {
-        "database_url": "postgresql+asyncpg://tutor:tutor@127.0.0.1:5432/tutor",
-    }
-    values.update(overrides)
-    return Settings(_env_file=None, **values)  # type: ignore[arg-type]
+def _settings(
+    *,
+    app_env: AppEnvironment = "test",
+    docs_enabled: bool | None = None,
+) -> Settings:
+    return Settings(
+        _env_file=None,
+        app_env=app_env,
+        docs_enabled=docs_enabled,
+        database_url="postgresql+asyncpg://tutor:tutor@127.0.0.1:5432/tutor",
+    )
 
 
 def test_unknown_path_is_problem_json(client: TestClient) -> None:
@@ -71,8 +75,7 @@ def test_unexpected_error_hides_the_message() -> None:
     assert "1234" not in response.text
 
 
-def test_docs_are_disabled_in_production(monkeypatch: object) -> None:
-    del monkeypatch
+def test_docs_are_disabled_in_production() -> None:
     app = create_app(_settings(app_env="production", docs_enabled=False))
     with TestClient(app) as client:
         assert client.get("/api/docs").status_code == 404

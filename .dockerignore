@@ -1,0 +1,16 @@
+.git
+**/.venv
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/node_modules
+**/.next
+**/.turbo
+.env
+.env.*
+!.env.example
+data/corpus/**
+!data/corpus/README.md
+*.tsbuildinfo

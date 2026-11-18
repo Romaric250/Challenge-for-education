@@ -1,0 +1,39 @@
+name: rwanda-ai-tutor
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: tutor
+      POSTGRES_PASSWORD: tutor
+      POSTGRES_DB: tutor
+    ports:
+      - "5432:5432"
+    volumes:
+      - tutor_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tutor -d tutor"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    profiles: ["full"]
+    build:
+      context: ..
+      dockerfile: infra/api.Dockerfile
+    environment:
+      APP_ENV: local
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+      DATABASE_URL: postgresql+asyncpg://tutor:tutor@postgres:5432/tutor
+      CORS_ORIGINS: '["http://localhost:3000"]'
+      LOG_LEVEL: INFO
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  tutor_postgres:

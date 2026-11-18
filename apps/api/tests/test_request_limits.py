@@ -11,10 +11,10 @@ def test_rejects_body_over_the_configured_limit() -> None:
     settings = Settings(
         _env_file=None,
         database_url="postgresql+asyncpg://tutor:tutor@127.0.0.1:5432/tutor",
-        max_request_bytes=8,
+        max_request_bytes=1024,
     )
     with TestClient(create_app(settings)) as client:
-        response = client.post("/health/live", content=b"123456789")
+        response = client.post("/health/live", content=b"x" * 1025)
     assert response.status_code == 413
     assert response.json()["code"] == "payload_too_large"
 
@@ -43,4 +43,5 @@ async def test_rejects_a_non_numeric_content_length() -> None:
         messages.append(message)
 
     await app(scope, receive, send)
-    assert messages[0]["status"] == 400
+    start = next(iter(messages))
+    assert start["status"] == 400

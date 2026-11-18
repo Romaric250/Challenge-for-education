@@ -64,7 +64,10 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(HTTPException)
     async def handle_http_exception(request: Request, exc: HTTPException) -> JSONResponse:
-        detail = exc.detail if isinstance(exc.detail, str) else "The request could not be completed."
+        if isinstance(exc.detail, str):
+            detail = exc.detail
+        else:
+            detail = "The request could not be completed."
         try:
             title = HTTPStatus(exc.status_code).phrase
         except ValueError:

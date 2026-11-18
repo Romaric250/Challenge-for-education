@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  api:
+    name: API
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: tutor
+          POSTGRES_PASSWORD: tutor
+          POSTGRES_DB: tutor
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U tutor -d tutor"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql+asyncpg://tutor:tutor@localhost:5432/tutor
+      LOG_LEVEL: WARNING
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - name: Install dependencies
+        run: uv sync --frozen --all-groups
+      - name: Lint
+        run: uv run ruff check src tests
+      - name: Check formatting
+        run: uv run ruff format --check src tests
+      - name: Type check
+        run: uv run mypy
+      - name: Migrate
+        run: uv run alembic upgrade head
+      - name: Test
+        run: uv run pytest
+
+  web:
+    name: Web
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint, typecheck, and build
+        run: pnpm exec turbo run lint typecheck build
+      - name: Check formatting
+        run: pnpm exec prettier --check .
+
+  api-client:
+    name: API client drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          uv sync --frozen --all-groups --project apps/api
+      - name: Regenerate the client
+        env:
+          APP_ENV: test
+          DATABASE_URL: postgresql+asyncpg://tutor:tutor@localhost:5432/tutor
+        run: bash scripts/generate-api-client.sh
+      - name: Fail if the client drifted
+        run: git diff --exit-code -- packages/api-client

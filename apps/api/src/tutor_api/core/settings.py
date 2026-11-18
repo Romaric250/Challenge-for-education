@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal, Self
 from urllib.parse import urlsplit
 
@@ -12,6 +13,26 @@ AppEnvironment = Literal["local", "test", "production"]
 LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 LlmProviderName = Literal["none", "anthropic", "openai_compatible"]
 
+
+def _env_files() -> tuple[str, ...]:
+    # Developers run commands from the repository root or from apps/api.
+    # The published image has neither checkout and is configured only by variables.
+    candidates: list[Path] = []
+    for parent in Path(__file__).resolve().parents:
+        if (parent / "pnpm-workspace.yaml").is_file():
+            candidates.append(parent / ".env")
+            break
+    candidates.append(Path.cwd() / ".env")
+    unique: list[str] = []
+    for candidate in candidates:
+        if not candidate.is_file():
+            continue
+        resolved = str(candidate.resolve())
+        if resolved not in unique:
+            unique.append(resolved)
+    return tuple(unique)
+
+
 def _parse_http_url(value: str) -> str:
     parsed = urlsplit(value.strip())
     if parsed.scheme not in {"http", "https"} or parsed.hostname is None:
@@ -24,9 +45,8 @@ def _parse_http_url(value: str) -> str:
 
 
 class Settings(BaseSettings):
-
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=_env_files(),
         env_file_encoding="utf-8",
         extra="ignore",
     )

@@ -1,6 +1,7 @@
 import logging
 import sys
 from collections.abc import MutableMapping
+from typing import cast
 
 import structlog
 
@@ -25,12 +26,7 @@ _SENSITIVE_KEYS = frozenset(
 
 def is_sensitive_key(key: str) -> bool:
     normalised = key.lower().replace("-", "_")
-    return (
-        normalised in _SENSITIVE_KEYS
-        or normalised.endswith("_token")
-        or normalised.endswith("_secret")
-        or normalised.endswith("_api_key")
-    )
+    return normalised in _SENSITIVE_KEYS or normalised.endswith(("_token", "_secret", "_api_key"))
 
 
 def redact_sensitive(
@@ -96,4 +92,4 @@ def configure_logging(settings: Settings) -> None:
 
 
 def get_logger(name: str) -> structlog.stdlib.BoundLogger:
-    return structlog.get_logger(name)
+    return cast(structlog.stdlib.BoundLogger, structlog.get_logger(name))
