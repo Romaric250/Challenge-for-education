@@ -29,6 +29,6 @@ repos:
 
       - id: prettier
         name: prettier
-        entry: pnpm exec prettier --write
+        entry: node ./node_modules/prettier/bin/prettier.cjs --write
         language: system
         types_or: [javascript, ts, tsx, json, markdown, yaml, css]
