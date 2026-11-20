@@ -185,6 +185,46 @@ def _content_length_invalid(scope: Scope) -> bool:
         return True
 
 
+class CsrfMiddleware:
+    """Cookie-authenticated mutations must come from an allowed origin.
+
+    Bearer requests are API clients. A request with neither a session cookie nor
+    an Origin header is treated as a non-browser client.
+    """
+
+    def __init__(self, app: ASGIApp, settings: Settings) -> None:
+        self._app = app
+        self._settings = settings
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http" or scope["method"] in {"GET", "HEAD", "OPTIONS"}:
+            await self._app(scope, receive, send)
+            return
+        authorization = _header(scope, b"authorization")
+        if authorization is not None and authorization.lower().startswith("bearer "):
+            await self._app(scope, receive, send)
+            return
+        origin = _header(scope, b"origin")
+        cookie = _header(scope, b"cookie") or ""
+        has_session = "tutor_access=" in cookie or "tutor_refresh=" in cookie
+        if origin is None and not has_session:
+            await self._app(scope, receive, send)
+            return
+        requested_with = _header(scope, b"x-requested-with")
+        if requested_with == "tutor" and origin in self._settings.cors_origins:
+            await self._app(scope, receive, send)
+            return
+        path = scope.get("path")
+        await _send_problem(
+            send,
+            status_code=403,
+            code="csrf_rejected",
+            title="Forbidden",
+            detail="The request origin is not allowed.",
+            instance=path if isinstance(path, str) else "/",
+        )
+
+
 async def _send_payload_too_large(send: Send, path: str) -> None:
     await _send_problem(
         send,

@@ -1,7 +1,7 @@
 SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c
 
-.PHONY: setup dev api web lint format typecheck test migrate generate-client compose-up compose-down check
+.PHONY: setup dev api web lint format typecheck test migrate generate-client seed-admin seed-demo compose-up compose-down check
 
 setup:
 	pnpm install
@@ -41,6 +41,12 @@ test: migrate
 
 migrate: compose-up
 	uv run --directory apps/api alembic upgrade head
+
+seed-admin:
+	uv run --directory apps/api python -m tutor_api.cli.seed_admin
+
+seed-demo:
+	uv run --directory apps/api python -m tutor_api.cli.seed_demo
 
 generate-client:
 	bash scripts/generate-api-client.sh

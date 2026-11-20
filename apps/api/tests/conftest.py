@@ -10,6 +10,7 @@ os.environ.setdefault(
     "postgresql+asyncpg://tutor:tutor@localhost:5432/tutor",
 )
 os.environ.setdefault("LOG_LEVEL", "WARNING")
+os.environ.setdefault("JWT_SECRET", "test-secret-key-with-32-characters")
 
 if os.environ.get("APP_ENV") == "production":
     raise RuntimeError("Refusing to run tests when APP_ENV is production")

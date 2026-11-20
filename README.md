@@ -2,7 +2,7 @@
 
 Curriculum-grounded tutor for Rwandan secondary schools. This repository is the web client, the API, and the database migrations.
 
-The current tree is the foundation: tooling, a versioned API with health checks, Postgres with pgvector, and a Next.js shell. Accounts, ingestion, retrieval, and the learning interface are built on top of this layout.
+Students sign in with a school code, ask questions, and get answers that cite the ingested curriculum. Teachers manage classes. Admins ingest PDFs and choose the model provider. The interface is in English and Kinyarwanda.
 
 ## Run it locally
 
@@ -15,7 +15,17 @@ bash scripts/dev.sh
 
 `make setup` installs JavaScript and Python dependencies, creates `.env` from `.env.example` when it is missing, starts Postgres, and applies migrations.
 
-The web app is at http://localhost:3000. The API is at http://localhost:8000. Readiness is http://localhost:8000/health/ready.
+Seed a demo school and a short original mathematics booklet:
+
+```bash
+uv run --directory apps/api python -m tutor_api.cli.seed_demo
+```
+
+Sign in at http://localhost:3000 as school `demo`, username `student`, password `orchard-cedar-19`. The teacher account is `teacher` / `orchard-maple-19`.
+
+To create the first real admin instead, set `SEED_ADMIN_SCHOOL_CODE`, `SEED_ADMIN_USERNAME`, and `SEED_ADMIN_PASSWORD`, then run `uv run --directory apps/api python -m tutor_api.cli.seed_admin`.
+
+The web app is at http://localhost:3000. The API is at http://localhost:8000. Readiness is http://localhost:8000/health/ready. Set `JWT_SECRET` before starting the API. The value in `.env.example` is for local use only.
 
 Details, the Neon connection, and the individual commands are in [docs/setup.md](docs/setup.md).
 

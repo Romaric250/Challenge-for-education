@@ -6,10 +6,11 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+import tutor_api.models as models
 from tutor_api.core.settings import get_settings
 from tutor_api.db.base import Base
 from tutor_api.db.engine import asyncpg_connect_config
-from tutor_api.models.schema_meta import SchemaMeta
+from tutor_api.models import SchemaMeta
 
 config = context.config
 if config.config_file_name is not None:
@@ -18,6 +19,8 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 if SchemaMeta.__table__.name not in target_metadata.tables:
     raise RuntimeError("SchemaMeta is not registered on the SQLAlchemy metadata")
+if "users" not in target_metadata.tables or models.User.__table__.name != "users":
+    raise RuntimeError("Domain models are not registered on the SQLAlchemy metadata")
 
 
 def run_migrations_offline() -> None:

@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Literal, Self
 from urllib.parse import urlsplit
 
-from pydantic import Field, field_validator, model_validator
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine.url import make_url
 
@@ -11,7 +11,9 @@ from tutor_api.db.constants import DEFAULT_EMBEDDING_DIMENSION
 
 AppEnvironment = Literal["local", "test", "production"]
 LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-LlmProviderName = Literal["none", "anthropic", "openai_compatible"]
+LlmProviderName = Literal["none", "anthropic", "openai_compatible", "fake"]
+EmbedderName = Literal["hashing", "openai_compatible"]
+_LOCAL_JWT_SECRET = "local-development-secret-change-me"  # noqa: S105
 
 
 def _env_files() -> tuple[str, ...]:
@@ -69,11 +71,30 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
     docs_enabled: bool | None = None
-    max_request_bytes: int = Field(default=1_048_576, ge=1_024, le=20_000_000)
+    max_request_bytes: int = Field(default=26_214_400, ge=1_024, le=32_000_000)
+
+    jwt_secret: SecretStr = Field(min_length=32)
+    access_token_minutes: int = Field(default=15, ge=5, le=60)
+    refresh_token_days: int = Field(default=7, ge=1, le=30)
+    login_lockout_threshold: int = Field(default=5, ge=3, le=20)
+    chat_requests_per_minute: int = Field(default=12, ge=1, le=120)
+    chat_requests_per_day: int = Field(default=80, ge=1, le=2000)
+    conversation_retention_days: int = Field(default=365, ge=1, le=3650)
 
     llm_provider: LlmProviderName = "none"
+    llm_model: str = "claude-sonnet-4-5"
     llm_base_url: str | None = None
     anthropic_base_url: str = "https://api.anthropic.com"
+    anthropic_api_key: SecretStr | None = None
+    openai_api_key: SecretStr | None = None
+    embedder: EmbedderName = "hashing"
+    embedding_model: str = "BAAI/bge-m3"
+    embedding_base_url: str | None = None
+    embedding_api_key: SecretStr | None = None
+    relevance_threshold: float = Field(default=0.2, gt=0, le=1)
+    retrieval_limit: int = Field(default=8, ge=1, le=20)
+    context_token_budget: int = Field(default=1800, ge=200, le=8000)
+    ocr_confidence_threshold: float = Field(default=0.55, gt=0, le=1)
     readiness_timeout_seconds: float = Field(default=2.0, gt=0, le=10)
 
     @field_validator("log_level", mode="before")
@@ -101,7 +122,7 @@ class Settings(BaseSettings):
             raise ValueError("CORS origins cannot include a wildcard")
         return cleaned
 
-    @field_validator("llm_base_url", "anthropic_base_url")
+    @field_validator("llm_base_url", "anthropic_base_url", "embedding_base_url")
     @classmethod
     def require_http_provider_url(cls, value: str | None) -> str | None:
         if value is None:
@@ -109,9 +130,15 @@ class Settings(BaseSettings):
         return _parse_http_url(value)
 
     @model_validator(mode="after")
-    def require_openai_compatible_base_url(self) -> Self:
+    def require_provider_configuration(self) -> Self:
         if self.llm_provider == "openai_compatible" and self.llm_base_url is None:
             raise ValueError("LLM_BASE_URL is required when LLM_PROVIDER is openai_compatible")
+        if self.embedder == "openai_compatible" and self.embedding_base_url is None:
+            raise ValueError("EMBEDDING_BASE_URL is required when EMBEDDER is openai_compatible")
+        if self.llm_provider == "fake" and self.app_env != "test":
+            raise ValueError("LLM_PROVIDER=fake is only available when APP_ENV is test")
+        if self.app_env == "production" and self.jwt_secret.get_secret_value() == _LOCAL_JWT_SECRET:
+            raise ValueError("JWT_SECRET must be changed in production")
         return self
 
     def resolved_docs_enabled(self) -> bool:
@@ -125,7 +152,7 @@ class Settings(BaseSettings):
         return self.log_json
 
     def provider_probe_url(self) -> str | None:
-        if self.llm_provider == "none":
+        if self.llm_provider in {"none", "fake"}:
             return None
         if self.llm_provider == "anthropic":
             return f"{self.anthropic_base_url}/v1/models"

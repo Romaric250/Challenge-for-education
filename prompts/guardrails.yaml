@@ -1,0 +1,17 @@
+patterns:
+  prompt_injection:
+    - ignore previous instructions
+    - ignore all previous
+    - reveal the system prompt
+    - you are now
+    - jailbreak
+  self_harm:
+    - kill myself
+    - want to die
+    - suicide
+    - end my life
+  exam_dump:
+    - give me the full answer
+    - write the whole exam
+    - answer every question
+    - just tell me the answer

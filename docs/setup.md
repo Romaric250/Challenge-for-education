@@ -1,6 +1,6 @@
 # Local setup
 
-This is the foundation of the Rwanda AI Tutor: a Next.js shell, a FastAPI service, and Postgres with pgvector. Sign-in, document ingestion, and tutoring are added in later phases. The commands below start what exists today.
+These commands install the tutor, start Postgres, and apply migrations. After that, `seed_demo` creates a school and a sample booklet, and `scripts/dev.sh` starts the API and the web app.
 
 ## Tools
 

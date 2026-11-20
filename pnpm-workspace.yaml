@@ -2,6 +2,11 @@ packages:
   - "apps/web"
   - "packages/*"
 
+allowBuilds:
+  "@parcel/watcher": true
+  "@swc/core": true
+  esbuild: true
+
 overrides:
   "openapi-typescript>typescript": "5.9.3"
 

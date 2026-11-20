@@ -1,0 +1,16 @@
+code: linear-equations
+title: Linear equations
+subject_code: mathematics
+steps:
+  - id: read
+    prompt: Read the equation and name the unknown.
+  - id: inverse
+    prompt: Name the operation that undoes the term next to the unknown.
+  - id: first-step
+    prompt: Apply that operation to both sides.
+  - id: second-step
+    prompt: Undo the remaining operation.
+  - id: check
+    prompt: Substitute your result back into the original equation.
+  - id: explain
+    prompt: Explain the result in one sentence.

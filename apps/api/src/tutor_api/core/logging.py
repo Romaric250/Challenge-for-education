@@ -26,7 +26,11 @@ _SENSITIVE_KEYS = frozenset(
 
 def is_sensitive_key(key: str) -> bool:
     normalised = key.lower().replace("-", "_")
-    return normalised in _SENSITIVE_KEYS or normalised.endswith(("_token", "_secret", "_api_key"))
+    return (
+        normalised in _SENSITIVE_KEYS
+        or "password" in normalised
+        or normalised.endswith(("_token", "_secret", "_api_key"))
+    )
 
 
 def redact_sensitive(

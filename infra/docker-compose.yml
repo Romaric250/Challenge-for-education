@@ -28,7 +28,9 @@ services:
       API_PORT: 8000
       DATABASE_URL: postgresql+asyncpg://tutor:tutor@postgres:5432/tutor
       CORS_ORIGINS: '["http://localhost:3000"]'
+      JWT_SECRET: ${JWT_SECRET}
       LOG_LEVEL: INFO
+      MAX_REQUEST_BYTES: 26214400
     ports:
       - "8000:8000"
     depends_on:
